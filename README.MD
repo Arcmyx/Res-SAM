@@ -6,10 +6,7 @@ The "video" folder includes a **reference video for using Res-SAM software**. Th
 
 # Guidance Video for Res-SAM
 
-<video width="600" controls>
-    <source src="https://zhouxr6066.github.io/Res-SAM/video/Res-SAM-guidance.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-</video>
+https://zhouxr6066.github.io/Res-SAM/video/Res-SAM-guidance.mp4
 
 # System Requirements
 
