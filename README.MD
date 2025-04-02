@@ -6,7 +6,7 @@ The "video" folder includes a **reference video for using Res-SAM software**. Th
 
 # Guidance Video for Res-SAM
 
-https://zhouxr6066.github.io/Res-SAM/video/Res-SAM-guidance.mp4
+https://github.com/user-attachments/assets/2507d121-58e2-421e-9972-6af967462a31
 
 # System Requirements
 
