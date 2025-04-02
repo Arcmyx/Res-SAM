@@ -2,7 +2,14 @@
 
 Res-SAM adopts a **two-stage processing workflow** to efficiently detect underground hazards and structures. First, the **Segment Anything Model (SAM)** preprocesses the GPR images, rapidly marking potential anomaly candidate regions without additional training. Then, **Reservoir Computing (RC)** is used to calculate the anomaly score heatmap. By integrating **Dual-Directional Echo State Networks (2D-ESN) and image patching techniques**, the software refines the anomalies within the candidate regions with high precision.
 
-The "Video guidance" folder includes a **reference video for using Res-SAM software**. This software can detect **underground risks** such as **cavities, cracks, and loose regions**, as well as **man-made structures** like **pipes and manholes** (which are not considered risks but still valuable for detection). The anomaly score heatmap highlights high-risk areas for further analysis.
+The "video" folder includes a **reference video for using Res-SAM software**. This software can detect **underground risks** such as **cavities, cracks, and loose regions**, as well as **man-made structures** like **pipes and manholes** (which are not considered risks but still valuable for detection). The anomaly score heatmap highlights high-risk areas for further analysis.
+
+# Guidance Video for Res-SAM
+
+<video width="600" controls>
+    <source src="https://github.com/zhouxr6066/Res-SAM/tree/main/video/Res-SAM guidance.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
 
 # System Requirements
 
