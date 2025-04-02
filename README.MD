@@ -1,6 +1,6 @@
 # GPR Underground Hazard Detection
 
-GPR Underground Hazard Detection adopts a **two-stage processing workflow** to efficiently detect underground hazards and structures. First, the **Segment Anything Model (SAM)** preprocesses the GPR images, rapidly marking potential anomaly candidate regions without requiring additional training, thus improving computational efficiency. Then, **Reservoir Computing (RC, specifically 2DESN)** is used to calculate the anomaly score heatmap. By integrating **Echo State Networks (ESN) and image patching techniques**, the software refines the anomalies within the candidate regions with high precision.
+GPR Underground Hazard Detection adopts a **two-stage processing workflow** to efficiently detect underground hazards and structures. First, the **Segment Anything Model (SAM)** preprocesses the GPR images, rapidly marking potential anomaly candidate regions without requiring additional training, thus improving computational efficiency. Then, **Reservoir Computing (RC)** is used to calculate the anomaly score heatmap. By integrating **Dual-Directional Echo State Networks (2D-ESN) and image patching techniques**, the software refines the anomalies within the candidate regions with high precision.
 
 This software can detect **underground risks** such as **cavities, cracks, and loose regions**, as well as **man-made structures** like **pipes and manholes** (which are not considered risks but still valuable for detection). The anomaly score heatmap highlights high-risk areas for further analysis.
 
