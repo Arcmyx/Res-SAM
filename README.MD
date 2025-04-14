@@ -39,24 +39,22 @@ To ensure smooth operation, the following system specifications are recommended:
 
 1. Clone the project repository:
 
-"`bash
+```bash
 git clone https://github.com/your-repo/GPR-Underground-Hazard-Detection.git
 cd GPR-Underground-Hazard-Detection
-"`
 
 2. Create a virtual environment:
 
-"`bash
+```bash
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
 venv\Scripts\activate  # Windows
-"`
 
 3. Install dependencies:
 
-"`bash
+```bash
 pip install -r requirements.txt
-"`
+
 
 If you encounter issues installing PyTorch or Segment Anything Model, please visit their official websites for manual installation:
 
@@ -74,21 +72,20 @@ which should be placed in the `sam` directory of the project.
 
 Simply run the following command:
 
-"`bash
+```bash
 python main.py
-"`
 
 To switch to the Chinese version, modify the `os.environ['LANGUAGE']` variable in `main.py`:
 
-"`python
+```python
 os.environ['LANGUAGE'] = 'zh-CN'
-"`
+
 
 Then, execute the command again:
 
-"`bash
+```bash
 python main.py
-"`
+
 
 ## Software Interface & Operations
 
