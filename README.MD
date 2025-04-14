@@ -49,7 +49,7 @@ cd GPR-Underground-Hazard-Detection
 "`bash
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
-# venv\Scripts\activate  # Windows
+venv\Scripts\activate  # Windows
 "`
 
 3. Install dependencies:
@@ -125,6 +125,8 @@ Once satisfied with the adjustments, click "Save the Image" to save the processe
 5. Output Image
 
 The saved image includes the processed visualization.
+
+
 
 # Data Input & Output
 
