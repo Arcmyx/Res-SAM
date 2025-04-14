@@ -10,12 +10,12 @@ This software can detect **underground risks** such as **cavities, cracks, and l
 Detecting underground anomalies using GPR faces three significant challenges. First, anomaly involves unknowns, thus, there is a notable shortage of labeled anomaly data. Acquiring anomaly samples is costly, resulting in highly imbalanced datasets dominated by normal (non-target) samples. This imbalance severely restricts the training process of data-driven approaches. Second, the high variability of subsurface environments, including diverse soils and structures, leads to significant differences in EM wave characteristics. Such variability impedes the generalization capability, causing approaches trained on one scenario to likely perform poorly in others. Third, underground anomalies typically present as gradual changes in EM wave reflections rather than sharp, distinct boundaries. This gradual transition complicates precise anomaly localization, making conventional methods designed for visual images inadequate for wholly and accurately delineating anomaly boundaries in real-world applications.
 
 
-The proposed Res-SAM leverages minimal non-target training data, readily obtainable from the detection area, and avoids computationally intensive training, enabling rapid deployment in previously unexplored environments. It synergizes visual discernibility with local dynamic variations in GPR data caused by underground anomalies. Recognizing that practical subsurface anomaly detection necessitates clearly delineating entire affected regions, Res-SAM provides rectangular outlines of anomalies along with their categorization. As depicted in the figure, Res-SAM operates in two main phases: ``Feature Collection'' and ``Anomaly Detection''. 
+The proposed Res-SAM leverages minimal non-target training data, readily obtainable from the detection area, and avoids computationally intensive training, enabling rapid deployment in previously unexplored environments. It synergizes visual discernibility with local dynamic variations in GPR data caused by underground anomalies. Recognizing that practical subsurface anomaly detection necessitates clearly delineating entire affected regions, Res-SAM provides rectangular outlines of anomalies along with their categorization. As depicted in the figure, Res-SAM operates in two main phases: "Feature Collection" and "Anomaly Detection". 
 
-![framewor_overview](images/framewor_overview.png)
+![framework_overview](images/framework_overview.png)
 
 
-In the Feature Collection phase, local patches are extracted from non-target GPR data and fitted individually using the Dual-Directional Echo State Network (2D-ESN). Acknowledging the vertical continuity of EM waves and horizontal correlations due to the consistency of the subsurface medium, effective changing information exists both vertically and horizontally within GPR data. 2D-ESN, a Reservoir Computing Network that incorporates two reservoirs in its hidden layer, connects each data point within the patch to its neighbors in both vertical and horizontal directions. Fitting each patch with 2D-ESN adequately captures the local data-inherent dual-directional changing information, resulting in a compact fitted readout model serving as ``dual-directional dynamic features'' or simply ``features'' of the original patch. These features, derived from patches on non-target data and denoted as ``normal features'', collectively represent local changing information in non-target data and are stored in a ``Feature Bank''.
+In the Feature Collection phase, local patches are extracted from non-target GPR data and fitted individually using the Dual-Directional Echo State Network (2D-ESN). Acknowledging the vertical continuity of EM waves and horizontal correlations due to the consistency of the subsurface medium, effective changing information exists both vertically and horizontally within GPR data. 2D-ESN, a Reservoir Computing Network that incorporates two reservoirs in its hidden layer, connects each data point within the patch to its neighbors in both vertical and horizontal directions. Fitting each patch with 2D-ESN adequately captures the local data-inherent dual-directional changing information, resulting in a compact fitted readout model serving as "dual-directional dynamic features" or simply "features" of the original patch. These features, derived from patches on non-target data and denoted as "normal features", collectively represent local changing information in non-target data and are stored in a "Feature Bank".
 
 In the Anomaly Detection phase, SAM is first introduced to identify initial candidate anomaly regions, guided by simple click prompts (typically single-digit number left- and right-mouse clicks). However, anomalies in GPR data often have indistinct boundaries due to EM wave reflection, diffraction, and attenuation, necessitating further refinement. To refine this, we focus on local changing information within GPR data caused by underground anomalies, aiming to precisely adjust the candidate region. Specifically, for each point within the candidate region, we extract a local patch centered on this point and fit this patch using 2D-ESN. The obtained dynamic features are compared with the normal features in the feature bank. Patches exhibiting significantly different dynamics (high anomaly likelihood) indicate anomalies; overlapping anomaly patches are then merged to precisely delineate anomaly regions. Owing to the similar changing information in GPR data, similar subsurface structures result in comparable dynamic features, while those from different structures exhibit significant variances, reflecting their distinct changing information along and among EM waves. Therefore, the confirmed anomaly regions undergo another round of 2D-ESN fitting to derive category-specific dynamic features, enabling anomaly categorization.
 
@@ -39,24 +39,24 @@ To ensure smooth operation, the following system specifications are recommended:
 
 1. Clone the project repository:
 
-```bash
+"`bash
 git clone https://github.com/your-repo/GPR-Underground-Hazard-Detection.git
 cd GPR-Underground-Hazard-Detection
-```
+"`
 
 2. Create a virtual environment:
 
-```bash
+"`bash
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
 # venv\Scripts\activate  # Windows
-```
+"`
 
 3. Install dependencies:
 
-```bash
+"`bash
 pip install -r requirements.txt
-```
+"`
 
 If you encounter issues installing PyTorch or Segment Anything Model, please visit their official websites for manual installation:
 
@@ -74,21 +74,21 @@ which should be placed in the `sam` directory of the project.
 
 Simply run the following command:
 
-```bash
+"`bash
 python main.py
-```
+"`
 
 To switch to the Chinese version, modify the `os.environ['LANGUAGE']` variable in `main.py`:
 
-```python
+"`python
 os.environ['LANGUAGE'] = 'zh-CN'
-```
+"`
 
 Then, execute the command again:
 
-```bash
+"`bash
 python main.py
-```
+"`
 
 ## Software Interface & Operations
 
