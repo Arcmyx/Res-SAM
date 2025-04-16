@@ -40,8 +40,8 @@ To ensure smooth operation, the following system specifications are recommended:
 1. Clone the project repository:
 
 ```bash
-git clone https://github.com/your-repo/GPR-Underground-Hazard-Detection.git
-cd GPR-Underground-Hazard-Detection
+git clone https://github.com/your-repo/GPR-Subsurface-Anomaly-Detection.git
+cd GPR-Subsurface-Anomaly-Detection
 ```
 
 2. Create a virtual environment:
@@ -49,7 +49,7 @@ cd GPR-Underground-Hazard-Detection
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
-venv\Scripts\activate  # Windows
+# venv\Scripts\activate  # Windows
 ```
 
 3. Install dependencies:
@@ -58,15 +58,20 @@ venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 ```
 
-
-If you encounter issues installing PyTorch or Segment Anything Model, please visit their official websites for manual installation:
-
 - [PyTorch](https://pytorch.org/)
+Please visit the official PyTorch website and follow the instructions to install PyTorch with the appropriate CUDA version for your system.
+
+- [Faiss](https://github.com/facebookresearch/faiss)
+```bash
+conda install pytorch::faiss-cpu
+```
+or
+```bash
+conda install pytorch::faiss-gpu
+```
 
 - [Segment Anything](https://github.com/facebookresearch/segment-anything)
-
-
-Additionally, Segment Anything requires downloading the pre-trained model weights: [ViT-L SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth),
+The package is included in requirements.txt already. Additionally, Segment Anything requires downloading the pre-trained model weights: [ViT-L SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth),
 which should be placed in the `sam` directory of the project.
 
 # Usage
