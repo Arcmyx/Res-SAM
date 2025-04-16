@@ -59,9 +59,11 @@ pip install -r requirements.txt
 ```
 
 - [PyTorch](https://pytorch.org/)
+
 Please visit the official PyTorch website and follow the instructions to install PyTorch with the appropriate CUDA version for your system.
 
 - [Faiss](https://github.com/facebookresearch/faiss)
+
 ```bash
 conda install pytorch::faiss-cpu
 ```
@@ -71,6 +73,7 @@ conda install pytorch::faiss-gpu
 ```
 
 - [Segment Anything](https://github.com/facebookresearch/segment-anything)
+
 The package is included in requirements.txt already. Additionally, Segment Anything requires downloading the pre-trained model weights: [ViT-L SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth),
 which should be placed in the `sam` directory of the project.
 
