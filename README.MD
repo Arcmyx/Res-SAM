@@ -158,3 +158,7 @@ The saved image includes the processed visualization.
 - `ui` Module: Implements the Graphical User Interface (GUI) to enhance usability.
 
 - `i18n` Module: Provides multi-language translation support.
+
+# 📄 License
+
+This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
