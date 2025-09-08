@@ -21,7 +21,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.heat_map = None
 
         self.timer = QTimer(self)
-        self.timer.setInterval(1500)
+        self.timer.setInterval(2000)
         self.timer.timeout.connect(self.sam_predict)
 
     def setup(self):
@@ -139,10 +139,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         arr = (arr - arr.mean()) / arr.std()
 
         return arr
-
-    def predict_box(self):
+    
+    def loading(self):
         loading_overlay = LoadingOverlay(self)
         loading_overlay.show_centered_in(self.image_label, timeout=1500)
+
+    def predict_box(self):
+        self.loading()
         image = self.get_image()
         if image is None:
             return
@@ -212,9 +215,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.image_label.setPixmap(updated_pixmap)
 
-    def output_box(self):
-        if self.heat_map is None:
-            return
+    def gen_full_heatmap(self):
+        self.loading()
+        self._hm_thread = QThread(self)
+        self._hm_worker = HeatmapWorker(self.get_image, self.get_mask)
+        self._hm_worker.moveToThread(self._hm_thread)
+
+        self._hm_thread.started.connect(self._hm_worker.run)
+        self._hm_worker.finished.connect(self._on_heatmap_ready)
+
+        self._hm_worker.finished.connect(self._hm_thread.quit)
+        self._hm_worker.finished.connect(self._hm_worker.deleteLater)
+        self._hm_thread.finished.connect(self._hm_thread.deleteLater)
+
+        self._hm_thread.start()
+
+    @Slot(object, int, int)
+    def _on_heatmap_ready(self, mask, x0, y0):
+        self.heat_map = (mask, x0, y0)
+        self.draw_mask(mask, x0, y0)
+        self._continue_after_heatmap()
+
+    def _continue_after_heatmap(self):
         heat_map, x, y = self.heat_map
         heat_map = (heat_map - heat_map.min()) / (heat_map.max() - heat_map.min())
 
@@ -235,6 +257,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 np.max(foreground_pixels[:, 1]) + x)
         box = (min_col, min_row, max_col, max_row)
         self.draw_rect(box)
+
+    def output_box(self):
+        if not self.sam_points:
+            self.gen_full_heatmap()
+            return
+        self._continue_after_heatmap()
 
     def save(self):
         pixmap = self.image_label.pixmap()

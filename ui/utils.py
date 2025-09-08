@@ -53,6 +53,26 @@ class Worker(QThread):
         mask = predict(self.image, self.point_coords, self.point_labels)
         self.finished.emit([self.image, mask])
 
+class HeatmapWorker(QObject):
+    finished = Signal(object, int, int)   # mask, x0, y0
+    failed = Signal(str)
+
+    def __init__(self, get_image_fn, get_mask_fn):
+        super().__init__()
+        self.get_image = get_image_fn
+        self.get_mask = get_mask_fn
+
+    @Slot()
+    def run(self):
+        try:
+            image = self.get_image()
+            x0, y0 = 0, 0
+            x1, y1 = image.shape[1], image.shape[0]
+            mask = self.get_mask(image, x0, y0, x1, y1)
+            self.finished.emit(mask, x0, y0)
+        except Exception:
+            ...
+
 
 class LoadingOverlay(QWidget):
     def __init__(self, parent=None):
@@ -87,3 +107,4 @@ class LoadingOverlay(QWidget):
         self.setGeometry(x, y, overlay_width, overlay_height)
         self.show()
         QTimer.singleShot(timeout, self.close)
+
