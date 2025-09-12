@@ -52,7 +52,7 @@ conda env create -f environment-gpu.yml # GPU, you may change the CUDA version a
 conda activate res-sam
 ```
 
-3. Download Segment Anythin Model pre-trained weights:
+3. Download Segment Anything Model pre-trained weights:
 
 - [Segment Anything](https://github.com/facebookresearch/segment-anything)
 
