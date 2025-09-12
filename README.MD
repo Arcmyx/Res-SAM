@@ -44,39 +44,19 @@ git clone https://github.com/your-repo/GPR-Subsurface-Anomaly-Detection.git
 cd GPR-Subsurface-Anomaly-Detection
 ```
 
-2. Create a virtual environment:
+2. Create a conda environment and install the dependencies based on whether you are using a GPU or CPU:
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# venv\Scripts\activate  # Windows
+conda env create -f environment-cpu.yml # CPU
+conda env create -f environment-gpu.yml # GPU, you may change the CUDA version according to your device.
+conda activate res-sam
 ```
 
-3. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-- [PyTorch](https://pytorch.org/)
-
-Please visit the official PyTorch website and follow the instructions to install PyTorch with the appropriate CUDA version for your system.
-
-- [Faiss](https://github.com/facebookresearch/faiss)
-
-```bash
-conda install pytorch::faiss-cpu
-```
-
-or
-
-```bash
-conda install pytorch::faiss-gpu
-```
+3. Download Segment Anythin Model pre-trained weights:
 
 - [Segment Anything](https://github.com/facebookresearch/segment-anything)
 
-The package is included in requirements.txt already. Additionally, Segment Anything requires downloading the pre-trained model weights: [ViT-L SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth),
+The package is included in the environment files already. Additionally, Segment Anything requires downloading the pre-trained model weights: [ViT-L SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth),
 which should be placed in the `sam` directory of the project.
 
 # Usage
