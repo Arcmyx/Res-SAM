@@ -24,7 +24,7 @@ In the Anomaly Detection phase, SAM is first introduced to identify initial cand
 
 # Guidance Video for Res-SAM
 
-https://github.com/user-attachments/assets/2507d121-58e2-421e-9972-6af967462a31
+https://github.com/user-attachments/assets/e2caa55a-dbd0-435d-8035-92e3adb4dfd7
 
 # System Requirements
 
