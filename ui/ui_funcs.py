@@ -141,8 +141,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return arr
     
     def loading(self):
-        loading_overlay = LoadingOverlay(self)
-        loading_overlay.show_centered_in(self.image_label, timeout=1500)
+        self.loading_overlay = LoadingOverlay(self)
+        self.loading_overlay.show_centered_in(self.image_label)
 
     def predict_box(self):
         self.loading()
@@ -218,7 +218,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def gen_full_heatmap(self):
         self.loading()
         self._hm_thread = QThread(self)
-        self._hm_worker = HeatmapWorker(self.get_image, self.get_mask)
+        self._hm_worker = GetMaskWithScoreWorker(self.get_image, self.get_mask, self.tile_res.extractor.fit_without_tiling, self.tile_res.anomaly_scorer.predict)
         self._hm_worker.moveToThread(self._hm_thread)
 
         self._hm_thread.started.connect(self._hm_worker.run)
@@ -257,6 +257,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 np.max(foreground_pixels[:, 1]) + x)
         box = (min_col, min_row, max_col, max_row)
         self.draw_rect(box)
+        self.loading_overlay.close()
 
     def output_box(self):
         if not self.sam_points:

@@ -48,6 +48,7 @@ class ESN_extractor(nn.Module):
         fitting the whole image into a single model
         '''
         data = data.to(device)
+        # print("esn data", data.shape)
         features = self.d2esn.forward(data)
         return features
 

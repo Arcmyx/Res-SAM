@@ -52,17 +52,22 @@ def show_box(box, ax):
 
 # sam = sam_model_registry["vit_h"](checkpoint="./sam_vit_h_4b8939.pth").to(device=device)
 sam = sam_model_registry["vit_l"](checkpoint=os.path.join(os.path.dirname(__file__), 'sam_vit_l_0b3195.pth')).to(device=device)
-mask_generator = SamAutomaticMaskGenerator(sam)
+mask_generator = SamAutomaticMaskGenerator(
+    sam,
+    points_per_side=32,
+    pred_iou_thresh=0.95,
+    stability_score_thresh=0.95,
+    crop_n_layers=1,
+    box_nms_thresh=0.7,
+    crop_n_points_downscale_factor=2,
+    min_mask_region_area=1000,
+    output_mode='binary_mask'
+)
 predictor = SamPredictor(sam)
 
 def predict_mask(image):
     masks = mask_generator.generate(image)
-    plt.figure(figsize=(10, 10))
-    plt.imshow(image)
-    for mask in masks:
-        show_mask(mask['segmentation'], plt.gca(), random_color=True)
-    plt.axis('off')
-    plt.savefig(os.path.join('samples', 'output_' + os.path.split(image_path)[1]))
+    return [find_box(mask['segmentation'].astype(int)) for mask in masks if mask['area'] < 2e4]
 
 def predict(image, input_point, input_label):
     predictor.set_image(image)
