@@ -106,9 +106,9 @@ python main.py
 
 Click "Output Predicted Area" button, and the system will further refine the suspicious regions based on the heatmap:
 
-- If Step 2 has marked points, the model will generate a new red bounding box around those areas to precisely delineate the anomaly.
+- If Step 2 included marked points: a red bounding box is generated around those areas to precisely delineate the anomaly.
 
-- If no points were marked (since Step 2 is optional), the system will default to performing prediction over the entire image and directly output a red bounding box covering the full area.
+- If no points were marked (since Step 2 is optional): the system automatically identifies an area of interest, runs prediction, and outputs a red bounding box covering that region.
 
 ![image-20250326095916035](images/image-20250326095916035.png)
 
