@@ -25,7 +25,7 @@ The two modes (click-guided & fully automatic) are automatically switched by def
 
 # Guidance Video for Res-SAM
 
-https://github.com/user-attachments/assets/95033d2d-1ce9-478a-86be-f91bd57114e0
+https://github.com/user-attachments/assets/5fa823db-3749-4fcd-b17a-d27495e8bdf6
 
 # System Requirements
 
