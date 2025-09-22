@@ -38,6 +38,8 @@ To ensure smooth operation, the following system specifications are recommended:
 
 # Installation Guide
 
+Following the steps below, the installation typically takes about half an hour under normal conditions.
+
 1. Clone the project repository:
 
 ```bash
@@ -109,6 +111,8 @@ Click "Output Predicted Area" button, and the system will further refine the sus
 - If Step 2 included marked points: a red bounding box is generated around those areas to precisely delineate the anomaly.
 
 - If no points were marked (since Step 2 is optional): the system automatically identifies an area of interest, runs prediction, and outputs a red bounding box covering that region.
+
+The output takes about 5 seconds under normal conditions.
 
 ![image-20250326095916035](images/image-20250326095916035.png)
 
