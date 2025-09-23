@@ -22,6 +22,63 @@ In the Anomaly Detection phase, SAM is first introduced to identify initial cand
 The two modes (click-guided & fully automatic) are automatically switched by default in our software. If you click the target area on the B-Scan, you will enter the click-guided mode. If you directly click the "Output Predicted Area" button, you will enter the fully automatic mode.
 
 
+# Pseudo-code of Res-SAM
+
+```pseudocode
+Algorithm: Res-SAM Framework
+Input:
+  Test image X
+  Positive clicks C⁺
+  Negative clicks C⁻
+  Normal set 𝔇
+  Patch size r
+  Stride s
+  Mask threshold τ_mask
+  Anomaly threshold τ_anom
+Output:
+  Bounding boxes ℛ aligned to X
+
+# Step 1: Feature collection from normal data
+B ← ∅
+for each I ∈ 𝔇 do
+    P ← UNFOLD(I, k = r, s = r)
+    for each p ∈ P do
+        f ← FIT_2DESN(p, r)
+        append f to B
+    end for
+end for
+
+# Step 2: SAM-based candidate region identification:
+M_norm ← SAM_INFER(X, C⁺, C⁻)          # normalized mask in [0,1]
+R_M    ← BOUNDING_BOX(M_norm, τ_mask)
+x₀, y₀ ← top-left corner of R_M
+X_M    ← CROP(X, R_M)
+H_M, W_M ← SIZE(X_M)
+
+# Step 3: Patch fitting and heatmap generating
+P_M ← UNFOLD(X_M, k = r, s = s)
+G_M ← CENTER_COORDS on X_M for patches in P_M
+A_M ← ZEROS(H_M, W_M)
+for i = 1 to |P_M| do
+    f ← FIT_2DESN(P_M[i], r)
+    d ← min_j DISTANCE(f, B[j])
+    c ← G_M[i]                          # center c_x, c_y in X_M
+    A_M[c_y - r/2 : c_y + r/2 , c_x - r/2 : c_x + r/2] ←
+        A_M[c_y - r/2 : c_y + r/2 , c_x - r/2 : c_x + r/2] + d
+end for
+A_M ← NORMALIZE(A_M)				# anomaly heatmap in [0,1]
+
+# Step 4: Outlining the anomaly region
+ℛ_M ← BOUNDING_BOX(A_M, τ_anom)
+if ℛ_M ≠ ∅ then
+    x₁′, y₁′, x₂′, y₂′ ← ℛ_M
+    ℛ ← [x₁′ + x₀, y₁′ + y₀, x₂′ + x₀, y₂′ + y₀]
+else
+    ℛ ← ∅
+end if
+
+return ℛ
+```
 
 # Guidance Video for Res-SAM
 
