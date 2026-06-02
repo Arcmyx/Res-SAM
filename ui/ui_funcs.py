@@ -1,5 +1,25 @@
 # -*- coding: utf-8 -*-
 from ui.utils import *
+import time
+
+class PatchResWorker(QThread):
+    finished = Signal(object, int, int)  # mask, x, y
+
+    def __init__(self, get_mask_fn, image, x0, y0, x1, y1):
+        super().__init__()
+        self.get_mask_fn = get_mask_fn
+        self.image = image
+        self.x0 = x0
+        self.y0 = y0
+        self.x1 = x1
+        self.y1 = y1
+
+    def run(self):
+        try:
+            mask = self.get_mask_fn(self.image, self.x0, self.y0, self.x1, self.y1)
+            self.finished.emit(mask, self.x0, self.y0)
+        except Exception as e:
+            print(f"[ERROR] PatchRes worker failed: {e}")
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -15,14 +35,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sam_thread = None
         self.lock = False
 
-        self.tile_res = PatchRes(stride=10, anomaly_threshold=0.1, hidden_size=30, window_size=[50, 50], features='PatchRes/features.pth')
+        self.tile_res = PatchRes(stride=40, anomaly_threshold=0.1, hidden_size=30, window_size=[150, 150], features='PatchRes/features.pth')
 
         self.tile_res.fit(0)
         self.heat_map = None
-
-        self.timer = QTimer(self)
-        self.timer.setInterval(2000)
-        self.timer.timeout.connect(self.sam_predict)
+        
+        self.patchres_thread = None
 
     def setup(self):
         self.setFixedSize(684, 559)
@@ -42,10 +60,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     x, y = pos.x(), pos.y()
                     if event.button() == Qt.LeftButton:
                         self.sam_points.add_point(x, y, 1)
+                        print("Point coords:", x, y)
+                        #self.sam_points.add_point(250, 200, 1)
                         self.draw_points()
                     elif event.button() == Qt.RightButton:
                         self.sam_points.add_point(x, y, 0)
                         self.draw_points()
+                    elif event.button() == Qt.MiddleButton:
+                        self.sam_predict()
 
         self.image_label.mousePressEvent = image_label_mousePressEvent
 
@@ -91,9 +113,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         painter.end()
 
         self.image_label.setPixmap(final_pixmap)
-        if self.sam_points:
-            self.timer.stop()
-            self.timer.start()
 
     def undo(self):
         if self.lock:
@@ -115,10 +134,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.base_layer = QPixmap(file_name).scaled(self.image_label.size(), Qt.KeepAspectRatio,
                                                         Qt.SmoothTransformation)
             self.draw_base_layer()
+            
+            # Auto-place 5 points
+            auto_points = [
+                (125, 125),
+                (125, 375),
+                (375, 125),
+                (375, 375),
+                (250, 250)
+            ]
+            for x, y in auto_points:
+                self.sam_points.add_point(x, y, 1)  # 1 = positive (green)
+            self.draw_points()
 
     def sam_predict(self):
         self.lock = True
-        self.timer.stop()
         if self.sam_points:
             self.predict_box()
         else:
@@ -146,6 +176,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def predict_box(self):
         self.loading()
+        # In ui_funcs.py, in predict_box()
         image = self.get_image()
         if image is None:
             return
@@ -176,24 +207,223 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @Slot(object)
     def draw_box(self, output):
+        import time
+        t_start = time.time()
         try:
             image, mask = output
+            t1 = time.time()
             box = find_box(mask)
             self.draw_rect(box, "blue")
+            t2 = time.time()
+            print(f"[PERF] find_box + draw_rect: {t2-t1:.3f}s")
+            print(f"[PERF] Showing SAM result immediately - closing loading overlay")
+            
+            # Close loading overlay immediately after showing SAM result
+            self.loading_overlay.close()
+            
             x0, y0, x1, y1 = box
             fix = self.tile_res.window_size[0] // 2
             x0_new = max(0, x0 - fix)
             y0_new = max(0, y0 - fix)
             x1_new = min(x1 + fix, image.shape[1])
             y1_new = min(y1 + fix, image.shape[0])
-            new_mask = self.get_mask(image, x0_new, y0_new, x1_new, y1_new)
+            
+            # Start PatchRes in background thread
+            self.patchres_thread = PatchResWorker(self.get_mask, image, x0_new, y0_new, x1_new, y1_new)
+            self.patchres_thread.finished.connect(self._on_patchres_ready)
+            self.patchres_thread.start()
+            
+            t3 = time.time()
+            print(f"[PERF] SAM display time: {t3-t_start:.3f}s (PatchRes computing in background)")
+        except Exception as e:
+            print(f"[ERROR] draw_box failed: {e}")
+            self.lock = False
+            if hasattr(self, 'loading_overlay'):
+                self.loading_overlay.close()
 
-            self.heat_map = (new_mask, x0_new, y0_new)
-            mask = self.get_mask(image, x0, y0, x1, y1)
+    @Slot(object, int, int)
+    def _on_patchres_ready(self, mask, x, y):
+        t_start = time.time()
+        try:
+            self.heat_map = (mask, x, y)
+            self.draw_mask(mask, x, y)
+            t_end = time.time()
+            print(f"[PERF] PatchRes result displayed: {t_end-t_start:.3f}s")
+        except Exception as e:
+            print(f"[ERROR] _on_patchres_ready failed: {e}")
+        finally:
+            self.lock = False
 
-            self.draw_mask(mask, x0, y0)
-        except RuntimeError:
-            ...
+    def draw_rect(self, box, color="red"):
+        pixmap = self.image_label.pixmap()
+        if pixmap is None:
+            return
+        updated_pixmap = pixmap.copy()
+        painter = QPainter(updated_pixmap)
+        pen = QPen(QColor(color), 3)
+        painter.setPen(pen)
+
+        x0, y0, x1, y1 = box
+        width = x1 - x0
+        height = y1 - y0
+
+        painter.drawRect(x0, y0, width, height)
+        painter.end()
+
+        self.image_label.setPixmap(updated_pixmap)
+
+    def gen_full_heatmap(self):
+        self.loading()
+        self._hm_thread = QThread(self)
+        self._hm_worker = GetMaskWithScoreWorker(self.get_image, self.get_mask, self.tile_res.extractor.fit_without_tiling, self.tile_res.anomaly_scorer.predict)
+        self._hm_worker.moveToThread(self._hm_thread)
+
+        self._hm_thread.started.connect(self._hm_worker.run)
+        self._hm_worker.finished.connect(self._on_heatmap_ready)
+
+        self._hm_worker.finished.connect(self._hm_thread.quit)
+        self._hm_worker.finished.connect(self._hm_worker.deleteLater)
+        self._hm_thread.finished.connect(self._hm_thread.deleteLater)
+
+        self._hm_thread.start()
+
+    @Slot(object, int, int)
+    def _on_heatmap_ready(self, mask, x0, y0):
+        self.heat_map = (mask, x0, y0)
+        self.draw_mask(mask, x0, y0)
+        self._continue_after_heatmap()
+
+    def _continue_after_heatmap(self):
+        heat_map, x, y = self.heat_map
+        heat_map = (heat_map - heat_map.min()) / (heat_map.max() - heat_map.min())
+
+        anomaly_threshold = 0.1
+        foreground_pixels = np.argwhere(heat_map > anomaly_threshold)
+        if foreground_pixels.size == 0:
+            min_row, min_col, max_row, max_col = 0, 0, 0, 0
+        else:
+            min_row = int(
+                np.min(foreground_pixels[:, 0]) + y)
+            min_col = int(
+                np.min(foreground_pixels[:, 1]) + x)
+            max_row = int(
+                np.max(foreground_pixels[:, 0]) + y)
+            max_col = int(
+                np.max(foreground_pixels[:, 1]) + x)
+
+        box = (min_col, min_row, max_col, max_row)
+        self.draw_rect(box)
+        self.loading_overlay.close()
+
+    def output_box(self):
+        if not self.sam_points:
+            self.gen_full_heatmap()
+            return
+        if self.heat_map is None:
+            return
+        self._continue_after_heatmap()
+
+    def save(self):
+        pixmap = self.image_label.pixmap()
+        success = False
+        if pixmap:
+            file_path, _ = QFileDialog.getSaveFileName(self, i18n("保存图片到文件"), "", "PNG Files (*.png);;JPEG Files (*.jpg)")
+            if file_path:
+                if pixmap.save(file_path):
+                    success = True
+        if success:
+            QMessageBox.information(self, i18n("保存成功"), i18n("图片已保存到") + f"\n{file_path}")
+        else:
+            QMessageBox.warning(self, i18n("保存失败"), i18n("图片保存失败"))
+
+    def draw_mask(self, mask, x, y):
+        pixmap = self.image_label.pixmap()
+        if pixmap is None:
+            return
+        updated_pixmap = pixmap.copy()
+        painter = QPainter(updated_pixmap)
+        painter.setOpacity(0.4)
+        mask = cv2.applyColorMap(mask[:, :, 0], cv2.COLORMAP_JET)
+        # mask = 255 - mask
+        mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
+
+        image = QImage(
+            mask.data, mask.shape[1], mask.shape[0], mask.shape[1] * 3, QImage.Format_RGB888)
+
+        painter.drawImage(x, y, image)
+        painter.end()
+
+        self.image_label.setPixmap(updated_pixmap)
+
+    def get_device(self):
+        return next(self.tile_res.parameters()).device
+
+    def get_mask(self, image, x0, y0, x1, y1):
+        image = torch.from_numpy(image).float()
+        area = image[y0: y1, x0: x1]
+        mask, _, _, _, _ = self.tile_res.predict(torch.mean(
+            area.permute(2, 0, 1), dim=0, keepdim=True), mode="pixel_seg")
+        mask = torch.from_numpy(mask)
+        new_mask = torch.zeros_like(image)
+
+        # print(mask.shape)
+        mask = mask.squeeze(0)
+        new_mask[y0: y1, x0: x1] = torch.cat(
+            [mask[0:y1 - y0, :x1 - x0].unsqueeze(2)] * 3, dim=2)
+
+        # self.draw_rect(box)
+        new_mask = torch.cat([mask[0:y1 - y0, :x1 - x0].unsqueeze(2)] * 3, dim=2)
+
+        new_mask = new_mask.numpy() * 255
+        new_mask = new_mask.astype(np.uint8)
+        return new_mask
+
+    @Slot(object)
+    def draw_box(self, output):
+        import time
+        t_start = time.time()
+        try:
+            image, mask = output
+            t1 = time.time()
+            box = find_box(mask)
+            self.draw_rect(box, "blue")
+            t2 = time.time()
+            print(f"[PERF] find_box + draw_rect: {t2-t1:.3f}s")
+            print(f"[PERF] Showing SAM result immediately - closing loading overlay")
+            
+            # Close loading overlay immediately after showing SAM result
+            self.loading_overlay.close()
+            
+            x0, y0, x1, y1 = box
+            fix = self.tile_res.window_size[0] // 2
+            x0_new = max(0, x0 - fix)
+            y0_new = max(0, y0 - fix)
+            x1_new = min(x1 + fix, image.shape[1])
+            y1_new = min(y1 + fix, image.shape[0])
+            
+            # Start PatchRes in background thread
+            self.patchres_thread = PatchResWorker(self.get_mask, image, x0_new, y0_new, x1_new, y1_new)
+            self.patchres_thread.finished.connect(self._on_patchres_ready)
+            self.patchres_thread.start()
+            
+            t3 = time.time()
+            print(f"[PERF] SAM display time: {t3-t_start:.3f}s (PatchRes computing in background)")
+        except Exception as e:
+            print(f"[ERROR] draw_box failed: {e}")
+            self.lock = False
+            if hasattr(self, 'loading_overlay'):
+                self.loading_overlay.close()
+
+    @Slot(object, int, int)
+    def _on_patchres_ready(self, mask, x, y):
+        t_start = time.time()
+        try:
+            self.heat_map = (mask, x, y)
+            self.draw_mask(mask, x, y)
+            t_end = time.time()
+            print(f"[PERF] PatchRes result displayed: {t_end-t_start:.3f}s")
+        except Exception as e:
+            print(f"[ERROR] _on_patchres_ready failed: {e}")
         finally:
             self.lock = False
 
@@ -262,6 +492,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def output_box(self):
         if not self.sam_points:
             self.gen_full_heatmap()
+            return
+        if self.heat_map is None:
             return
         self._continue_after_heatmap()
 
