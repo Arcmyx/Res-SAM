@@ -43,7 +43,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.patchres_thread = None
 
     def setup(self):
-        self.setFixedSize(684, 559)
+        self.setFixedSize(684, 1000)
         self.image_label.setScaledContents(False)
         self.image_label.setStyleSheet("border: 1px solid black;")
         self.image_label.setAlignment(Qt.AlignLeft)

@@ -5,7 +5,6 @@ from PySide6.QtGui import QFontMetrics, QPixmap, QPainter, QImage, QPen, QColor,
 from PySide6.QtCore import Qt, QObject, QEvent, QThread, Signal, Slot, QTimer
 import numpy as np
 from io import BytesIO
-import cv2
 import torch
 from PIL import ImageQt, Image
 from ui.ui_main import Ui_MainWindow
